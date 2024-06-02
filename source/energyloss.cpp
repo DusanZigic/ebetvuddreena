@@ -34,7 +34,7 @@ energyLoss::energyLoss(int argc, const char *argv[])
 		std::string val = in.substr(in.find("=")+1, in.length());
 		inputParams[key] = val;
 	}
-	std::vector<std::string> arguments = {"collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
+	std::vector<std::string> arguments = {"ltablesDir", "ptDistsDir", "collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
 	for (const auto &inputParam : inputParams) {
 		if(std::find(arguments.begin(), arguments.end(), inputParam.first) == arguments.end()) {
 			std::cerr << "Error: provided argument flag: '" << inputParam.first << "' is not an option." << std::endl;
@@ -52,7 +52,7 @@ energyLoss::energyLoss(int argc, const char *argv[])
 			m_error = true;
 		}
 	}
-	std::vector<std::string> argumentsFile = {"collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
+	std::vector<std::string> argumentsFile = {"ltablesDir", "ptDistsDir", "collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
 	for (const auto &inputParam : inputParamsFile) {
 		if(std::find(argumentsFile.begin(), argumentsFile.end(), inputParam.first) == argumentsFile.end()) {
 			std::cerr << "Error: in configration file provided argument: '" << inputParam.first << "' is not an option." << std::endl;
@@ -60,6 +60,26 @@ energyLoss::energyLoss(int argc, const char *argv[])
 			std::cerr << "collsys = PbPb\nsNN = 5020GeV\npName = Charm\ncentrality = 30-40%\nxB = 0.6\neventN = 1000\nBCPP = 20%\nphiGridN = 25\nTIMESTEP = 0.1\nTCRIT = 0.155\nBCPSEED = 0" << std::endl;
 			m_error = true;
 		}
+	}
+
+	if ((inputParams.count("ltablesDir") == 0) && (inputParamsFile.count("ltablesDir") == 0)) {
+		std::cerr << "Error: ltables directory path parameter must be provided. Aborting..." << std::endl;
+		m_error = true;
+	}
+	else {
+		if (inputParamsFile.count("ltablesDir") > 0) m_ltablesDir = inputParamsFile.at("ltablesDir");
+		if (    inputParams.count("ltablesDir") > 0) m_ltablesDir =     inputParams.at("ltablesDir");
+		if (m_ltablesDir.back() != '/') m_ltablesDir += "/";
+	}
+
+	if ((inputParams.count("ptDistsDir") == 0) && (inputParamsFile.count("ptDistsDir") == 0)) {
+		std::cerr << "Error: ptDists directory path parameter must be provided. Aborting..." << std::endl;
+		m_error = true;
+	}
+	else {
+		if (inputParamsFile.count("ptDistsDir") > 0) m_ptDistsDir = inputParamsFile.at("ptDistsDir");
+		if (    inputParams.count("ptDistsDir") > 0) m_ptDistsDir =     inputParams.at("ptDistsDir");
+		if (m_ptDistsDir.back() != '/') m_ptDistsDir += "/";
 	}
 
 	//setting parameter values based on config file values and overwriting with command line values:
@@ -192,7 +212,7 @@ double energyLoss::productLog(double x) const
 
 int energyLoss::loaddsdpti2(const std::string &pname, interpolationF<double> &dsdpti2int)const 
 {
-	const std::string path_in = "./ptDists/ptDist" + m_sNN + "/ptDist_" + m_sNN + "_" + pname + ".dat";
+	const std::string path_in = m_ptDistsDir + "ptDist" + m_sNN + "/ptDist_" + m_sNN + "_" + pname + ".dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
@@ -232,7 +252,7 @@ int energyLoss::loadLdndx()
 	std::stringstream xBss; xBss << std::fixed << std::setprecision(1) << m_xB;
 	std::stringstream nfss; nfss << std::fixed << std::setprecision(1) << m_nf;
 
-	const std::string path_in = "./ltables/ldndx_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
+	const std::string path_in = m_ltablesDir + "ldndx_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
@@ -285,7 +305,7 @@ int energyLoss::loadLNorm()
 	std::stringstream xBss; xBss << std::fixed << std::setprecision(1) << m_xB;
 	std::stringstream nfss; nfss << std::fixed << std::setprecision(1) << m_nf;
 
-	const std::string path_in = "./ltables/lnorm_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
+	const std::string path_in = m_ltablesDir + "lnorm_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
@@ -334,7 +354,7 @@ int energyLoss::loadLColl()
 
 	std::stringstream nfss; nfss << std::fixed << std::setprecision(1) << m_nf;
 
-	const std::string path_in = "./ltables/lcoll_nf=" + nfss.str() + "_" + partName + ".dat";
+	const std::string path_in = m_ltablesDir + "lcoll_nf=" + nfss.str() + "_" + partName + ".dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
