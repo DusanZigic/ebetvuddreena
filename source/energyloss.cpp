@@ -62,8 +62,8 @@ energyLoss::energyLoss(int argc, const char *argv[])
 		}
 	}
 
-	if ((inputParams.count("ltablesDir") == 0) && (inputParamsFile.count("ltablesDir") == 0)) {
-		std::cerr << "Error: ltables directory path parameter must be provided. Aborting..." << std::endl;
+	if ((inputParams.count("modelDir") == 0) && (inputParamsFile.count("modelDir") == 0)) {
+		std::cerr << "Error: modle directory path parameter must be provided. Aborting..." << std::endl;
 		m_error = true;
 	}
 	else {
