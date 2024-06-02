@@ -18,8 +18,7 @@ public:
 private:
     bool m_error; //flag that checks if previous calculation is done properly
 
-    std::string m_ltablesDir;   //ltables directory
-    std::string m_ptDistsDir;   //ptDist directory
+    std::string m_modelDir;   //model directory
     
     std::string m_collsys;	    //collision system
     std::string m_sNN; 		    //collision energy
