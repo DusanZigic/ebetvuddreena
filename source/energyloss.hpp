@@ -23,7 +23,6 @@ private:
     std::string m_collsys;	    //collision system
     std::string m_sNN; 		    //collision energy
     std::string m_pName; 	    //particle name
-    std::string m_centrality;   //centrality class
     double m_xB;			    //xB value
     double m_BCPP;			    //binary collision points percentage
     size_t m_eventN;		    //number of events 
