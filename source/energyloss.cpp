@@ -22,7 +22,7 @@ energyLoss::energyLoss(int argc, const char *argv[])
 	std::vector<std::string> inputs; for (int i=2; i<argc; i++) inputs.push_back(argv[i]);
 
 	if ((inputs.size() == 1) && (inputs[0] == "-h")) {
-		std::cout << "default values: --collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --BCPP=20% --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
+		std::cout << "default values: --collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
 		m_error = true;
 	}
 
@@ -34,12 +34,12 @@ energyLoss::energyLoss(int argc, const char *argv[])
 		std::string val = in.substr(in.find("=")+1, in.length());
 		inputParams[key] = val;
 	}
-	std::vector<std::string> arguments = {"modelDir", "collsys", "sNN", "pName", "xB", "eventIDs", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
+	std::vector<std::string> arguments = {"modelDir", "collsys", "sNN", "pName", "xB", "eventIDs", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
 	for (const auto &inputParam : inputParams) {
 		if(std::find(arguments.begin(), arguments.end(), inputParam.first) == arguments.end()) {
 			std::cerr << "Error: provided argument flag: '" << inputParam.first << "' is not an option." << std::endl;
 			std::cerr << "Valid parameters and default values are: ";
-			std::cerr << "--collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --BCPP=20% --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
+			std::cerr << "--collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
 			std::cerr << "For congiguration file use: --config=[pathToConfFile]" << std::endl;
 			m_error = true;
 		}
@@ -52,12 +52,12 @@ energyLoss::energyLoss(int argc, const char *argv[])
 			m_error = true;
 		}
 	}
-	std::vector<std::string> argumentsFile = {"modelDir", "collsys", "sNN", "pName", "xB", "eventIDs", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
+	std::vector<std::string> argumentsFile = {"modelDir", "collsys", "sNN", "pName", "xB", "eventIDs", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
 	for (const auto &inputParam : inputParamsFile) {
 		if(std::find(argumentsFile.begin(), argumentsFile.end(), inputParam.first) == argumentsFile.end()) {
 			std::cerr << "Error: in configration file provided argument: '" << inputParam.first << "' is not an option." << std::endl;
 			std::cerr << "Valid parameters and default values are: \n";
-			std::cerr << "collsys = PbPb\nsNN = 5020GeV\npName = Charm\nxB = 0.6\eventIDs = 1000-4000\nBCPP = 20%\nphiGridN = 25\nTIMESTEP = 0.1\nTCRIT = 0.155\nBCPSEED = 0" << std::endl;
+			std::cerr << "collsys = PbPb\nsNN = 5020GeV\npName = Charm\nxB = 0.6\eventIDs = 1000-4000\nphiGridN = 25\nTIMESTEP = 0.1\nTCRIT = 0.155\nBCPSEED = 0" << std::endl;
 			m_error = true;
 		}
 	}
@@ -96,10 +96,6 @@ energyLoss::energyLoss(int argc, const char *argv[])
 		std::getline(ss, buffer, '-'); m_eventIDlow  = std::stoi(buffer);
 		std::getline(ss, buffer, '-'); m_eventIDhigh = std::stoi(buffer);
 	}
-
-	std::string bcppstr = "20%"; if (inputParamsFile.count("BCPP") > 0) bcppstr = inputParamsFile["BCPP"];
-						         if (    inputParams.count("BCPP") > 0) bcppstr =     inputParams["BCPP"];
-	bcppstr.replace(bcppstr.find("%"), 1, ""); m_BCPP = stod(bcppstr)/100.0;
 
 	m_phiGridN = 25; if (inputParamsFile.count("phiGridN") > 0) m_phiGridN = stoi(inputParamsFile["phiGridN"]);
 					 if (    inputParams.count("phiGridN") > 0) m_phiGridN = stoi(    inputParams["phiGridN"]);
@@ -160,8 +156,8 @@ void energyLoss::runEnergyLoss()
 	if (loadLNorm() != 1) return;
 	if (loadLColl() != 1) return;
 
+	if (generateBCPPmap()  != 1) return;
 	if (generateTempGrid() != 1) return;
-	
  	if (loadPhiPoints() != 1) return;
 
 	if ((m_pName == "Bottom") || (m_pName == "Charm")) {
@@ -385,6 +381,42 @@ int energyLoss::loadLColl()
 	return 1;
 }
 
+int energyLoss::generateBCPPmap()
+{
+    std::string path_in = "./bcpp.dat";
+	std::ifstream file_in(path_in, std::ios_base::in);
+	if (!file_in.is_open()) {
+		std::cerr << "Error: unable to open BCPP file. Aborting..." << std::endl;
+		return -1;
+	}
+
+    const size_t EMPTY = 0;
+
+	std::string line, pName, buffer; size_t eventID[2]; double bcpp;
+	while (std::getline(file_in, line))
+	{
+		if (line[0] == '#') {
+			pName = line;
+			pName.replace(pName.find("#"), sizeof("#")-1, "");
+			continue;
+		}
+
+		std::stringstream ss(line);
+		ss >> eventID[0]; ss >> eventID[1];
+		
+		ss >> buffer;
+		buffer.replace(buffer.find("%"), sizeof("%")-1, "");
+		bcpp = std::stod(buffer)/100.0;
+		
+        m_BCPP[pName][eventID[0]] = bcpp;
+        m_BCPP[pName][eventID[1]] = EMPTY;
+	}
+
+	file_in.close();
+
+    return 1;
+}
+
 int energyLoss::generateTempGrid()
 {
 	const std::string path_in = "./Temp_evo/temp_grids.dat";
@@ -511,7 +543,15 @@ int energyLoss::generateInitPosPoints(size_t event_id, std::vector<double> &xPoi
 {
 	std::vector<std::vector<double>> bcpts; if (loadBinCollPoints(event_id, bcpts) != 1) return -1;
 
-	size_t bsptsNum = static_cast<size_t>(m_BCPP*static_cast<double>(bcpts.size()));
+	const size_t EMPTY = 0;
+	std::map<size_t, double>::iterator it = m_BCPP[m_pName].upper_bound(event_id);
+	if (it == m_BCPP[m_pName].begin() || (--it)->second == EMPTY) {
+		std::cerr << "Error: eventID not in range. Aborting..." << std::endl;
+		return -2;
+	}
+	double bcpp = it->second;
+
+	size_t bsptsNum = static_cast<size_t>(bcpp*static_cast<double>(bcpts.size()));
 
 	if (bsptsNum < 1) bsptsNum = 1;
 
