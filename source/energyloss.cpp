@@ -382,7 +382,7 @@ int energyLoss::loadLColl()
 
 int energyLoss::generateTempGrid()
 {
-	const std::string path_in = "./evols/evols_cent=" + m_centrality + "/evolgridparams.dat";
+	const std::string path_in = "./Temp_evo/temp_grids.dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
@@ -464,7 +464,7 @@ int energyLoss::loadPhiPoints()
 
 int energyLoss::loadBinCollPoints(size_t event_id, std::vector<std::vector<double>> &bcpoints)
 {
-	const std::string path_in = "./binarycollpts/binarycollpts_cent=" + m_centrality + "/binarycollpts" + std::to_string(event_id) + ".dat";
+	const std::string path_in = "./bcp/bcp" + std::to_string(event_id) + ".dat";
 
 	std::ifstream file_in(path_in, std::ios_base::in);
 	if (!file_in.is_open()) {
@@ -529,7 +529,7 @@ int energyLoss::generateInitPosPoints(size_t event_id, std::vector<double> &xPoi
 
 int energyLoss::loadTProfile(size_t event_id, interpolationF<double> &tempProfile)
 {
-	const std::string path_in = "./evols/evols_cent=" + m_centrality + "/tempevol" + std::to_string(event_id) + ".dat";
+	const std::string path_in = "./Temp_evo/Temp_evo" + std::to_string(event_id) + ".dat";
 
 	std::ifstream file_in(path_in, std::ios_base::in | std::ios_base::binary);
 	if (!file_in.is_open()) {
