@@ -253,35 +253,35 @@ int energyLoss::loadLdndx()
 
 	std::vector<double> Ldndx_tau, Ldndx_p, Ldndx_T, Ldndx_x, Ldndx_f;
 
-	std::string line; double buffer;
+	for (const auto& tau : m_Grids.tauPts()) {
+		for (const auto& p : m_Grids.pPts()) {
+			for (const auto& T : m_Grids.TPts()) {
+				for (const auto& x : m_Grids.xPts()) {
+					Ldndx_tau.push_back(tau);
+					Ldndx_p.push_back(p);
+					Ldndx_T.push_back(T);
+					Ldndx_x.push_back(x);
+				}
+			}
+		}
+	}
 
-	while (std::getline(file_in, line))
-	{
-        if (line.at(0) == '#')
-            continue;
-
-		std::stringstream ss(line);
-		ss >> buffer; Ldndx_tau.push_back(buffer);
-		ss >> buffer; Ldndx_p.push_back(buffer);
-		ss >> buffer; Ldndx_T.push_back(buffer);
-		ss >> buffer; Ldndx_x.push_back(buffer);
-		ss >> buffer; Ldndx_f.push_back(buffer);
+	float buffer;
+	while (true) {
+		file_in.read((char*)&buffer, sizeof(float));
+		if (file_in.eof()) break;
+		Ldndx_f.push_back(static_cast<double>(buffer));
 	}
 
 	file_in.close();
 
+	if (Ldndx_f.size() != Ldndx_tau.size()) {
+		std::cerr << "Error: Ldndx grids to not correspond to import function values. Aborting..." << std::endl;
+		return -2;
+	}
+
 	m_Ldndx.setData(Ldndx_tau, Ldndx_p, Ldndx_T, Ldndx_x, Ldndx_f);
-
-	std::vector<std::vector<double>> domain = m_Ldndx.domain();
-	if (m_Grids.tauPts(0)  < domain[0][0]) {std::cerr << "Error: tau grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.tauPts(-1) > domain[0][1]) {std::cerr << "Error: tau grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.pPts(0)    < domain[1][0]) {std::cerr << "Error:   p grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.pPts(-1)   > domain[1][1]) {std::cerr << "Error:   p grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TPts(0)    < domain[2][0]) {std::cerr << "Error:   T grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TPts(-1)   > domain[2][1]) {std::cerr << "Error:   T grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.xPts(0)    < domain[3][0]) {std::cerr << "Error:   x grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.xPts(-1)   > domain[3][1]) {std::cerr << "Error:   x grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
-
+	
 	return 1;
 }
 
@@ -306,32 +306,32 @@ int energyLoss::loadLNorm()
 
 	std::vector<double> LNorm_tau, LNorm_p, LNorm_T, LNorm_f; //defining vectors that store LNorm table values
 
-	std::string line; double buffer;
+	for (const auto& tau : m_Grids.tauPts()) {
+		for (const auto& p : m_Grids.pPts()) {
+			for (const auto& T : m_Grids.TPts()) {
+				LNorm_tau.push_back(tau);
+				LNorm_p.push_back(p);
+				LNorm_T.push_back(T);
+			}
+		}
+	}
 
-	while (std::getline(file_in, line))
-	{
-        if (line.at(0) == '#')
-            continue;
-
-		std::stringstream ss(line);
-		ss >> buffer; LNorm_tau.push_back(buffer);
-		ss >> buffer; LNorm_p.push_back(buffer);
-		ss >> buffer; LNorm_T.push_back(buffer);
-		ss >> buffer; LNorm_f.push_back(buffer);
+	float buffer;
+	while (true) {
+		file_in.read((char*)&buffer, sizeof(float));
+		if (file_in.eof()) break;
+		LNorm_f.push_back(static_cast<double>(buffer));
 	}
 
 	file_in.close();
+	
+	if (LNorm_f.size() != LNorm_tau.size()) {
+		std::cerr << "Error: Lnorm grids to not correspond to import function values. Aborting..." << std::endl;
+		return -2;
+	}
 
 	m_LNorm.setData(LNorm_tau, LNorm_p, LNorm_T, LNorm_f);
-
-	std::vector<std::vector<double>> domain = m_LNorm.domain();
-	if (m_Grids.tauPts(0)  < domain[0][0]) {std::cerr << "Error: tau grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.tauPts(-1) > domain[0][1]) {std::cerr << "Error: tau grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.pPts(0)    < domain[1][0]) {std::cerr << "Error:   p grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.pPts(-1)   > domain[1][1]) {std::cerr << "Error:   p grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TPts(0)    < domain[2][0]) {std::cerr << "Error:   T grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TPts(-1)   > domain[2][1]) {std::cerr << "Error:   T grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
-
+	
 	return 1;
 }
 
@@ -355,28 +355,28 @@ int energyLoss::loadLColl()
 
 	std::vector<double> LColl_p, LColl_T, LColl_f;
 
-	std::string line; double buffer;
+	for (const auto& p : m_Grids.pCollPts()) {
+		for (const auto& T : m_Grids.TCollPts()) {
+			LColl_p.push_back(p);
+			LColl_T.push_back(T);
+		}
+	}
 
-	while (std::getline(file_in, line))
-	{
-        if (line.at(0) == '#')
-            continue;
-            
-		std::stringstream ss(line);
-		ss >> buffer; LColl_p.push_back(buffer);
-		ss >> buffer; LColl_T.push_back(buffer);
-		ss >> buffer; LColl_f.push_back(buffer);
+	float buffer;
+	while (true) {
+		file_in.read((char*)&buffer, sizeof(float));
+		if (file_in.eof()) break;
+		LColl_f.push_back(static_cast<double>(buffer));
 	}
 
 	file_in.close();
 
-	m_LColl.setData(LColl_p, LColl_T, LColl_f);
+	if (LColl_f.size() != LColl_p.size()) {
+		std::cerr << "Error: Lcoll grids to not correspond to import function values. Aborting..." << std::endl;
+		return -2;
+	}
 
-	std::vector<std::vector<double>> domain = m_LColl.domain();
-	if (m_Grids.pCollPts(0)  < domain[0][0]) {std::cerr << "Error: p grid point(s) out of lower bound of LColl domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.pCollPts(-1) > domain[0][1]) {std::cerr << "Error: p grid point(s) out of upper bound of LColl domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TCollPts(0)  < domain[1][0]) {std::cerr << "Error: T grid point(s) out of lower bound of LColl domain. Aborting..." << std::endl; return -1;}
-	if (m_Grids.TCollPts(-1) > domain[1][1]) {std::cerr << "Error: T grid point(s) out of upper bound of LColl domain. Aborting..." << std::endl; return -1;}
+	m_LColl.setData(LColl_p, LColl_T, LColl_f);
 
 	return 1;
 }
