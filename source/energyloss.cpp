@@ -598,7 +598,6 @@ int energyLoss::exportResults(const std::string &particleName, size_t event_id, 
 	std::vector<std::string> header;
     header.push_back("#collision_system: " + m_collsys);
 	header.push_back("#collision_energy: " + m_sNN);
-	header.push_back("#particle_type: " + particleName);
 	header.push_back("#centrality: " + m_centrality);
 
 	std::stringstream xbsstr; xbsstr << std::fixed << std::setprecision(1) << m_xB;
@@ -625,7 +624,17 @@ int energyLoss::exportResults(const std::string &particleName, size_t event_id, 
 	header.push_back("#   pT [GeV]       phi          R_AA   ");
 
 	//setting file path:
-	const std::string path_out = "./results/results" + particleName + "/" + particleName + "_" + m_collsys + "_sNN=" + m_sNN + "_cent=" + m_centrality + "_xB=" + xbsstr.str() + "_dist_" + std::to_string(event_id) + ".dat";
+	std::string pCode = "c";
+	if (particleName == "Bottom")     pCode = "b";
+	if (particleName == "Charm")      pCode = "c";
+	if (particleName == "Down")       pCode = "d";
+	if (particleName == "DownBar")    pCode = "db";
+	if (particleName == "Gluon")      pCode = "g";
+	if (particleName == "Strange")    pCode = "s";
+	if (particleName == "StrangeBar") pCode = "sb";
+	if (particleName == "Up")         pCode = "u";
+	if (particleName == "UpBar")      pCode = "ub";
+	const std::string path_out = "./results/" + pCode + std::to_string(event_id) + ".dat";
 
 	std::ofstream file_out(path_out, std::ios_base::out);
 	if (!file_out.is_open()) {
