@@ -17,21 +17,18 @@ public:
 
 private:
     bool m_error; //flag that checks if previous calculation is done properly
-
-    std::string m_workDir;      //work directory
     
     std::string m_collsys;	    //collision system
     std::string m_sNN; 		    //collision energy
     std::string m_pName; 	    //particle name
+    std::string m_centrality;   //centrality class
     double m_xB;			    //xB value
-    size_t m_eventIDlow;        //lower eventID
-    size_t m_eventIDhigh;       //higher eventID
+    double m_BCPP;			    //binary collision points percentage
+    size_t m_eventN;		    //number of events 
     size_t m_phiGridN;		    //phi points number
     double m_TIMESTEP, m_TCRIT;	//time step and critical temperature
     int m_BCPSEED;			    //seed for generating initial position points
     
-    std::map<std::string, std::map<size_t, double>> m_BCPP; //binary collision points percentage
-
     double m_nf;			     //effective number of flavours
     const double m_lambda = 0.2; //QCD scale
     
@@ -68,7 +65,6 @@ private:
     int loadLdndx();
     int loadLNorm();
     int loadLColl();
-    int generateBCPPmap();
     int generateTempGrid();
     int loadPhiPoints();
     int loadBinCollPoints(size_t event_id, std::vector<std::vector<double>> &bcpoints);

@@ -22,7 +22,7 @@ energyLoss::energyLoss(int argc, const char *argv[])
 	std::vector<std::string> inputs; for (int i=2; i<argc; i++) inputs.push_back(argv[i]);
 
 	if ((inputs.size() == 1) && (inputs[0] == "-h")) {
-		std::cout << "default values: --workDir --collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
+		std::cout << "default values: --collsys=PbPb --sNN=5020GeV --pName=Charm --centrality=30-40% --xB=0.6 --eventN=1000 --BCPP=20% --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
 		m_error = true;
 	}
 
@@ -34,24 +34,15 @@ energyLoss::energyLoss(int argc, const char *argv[])
 		std::string val = in.substr(in.find("=")+1, in.length());
 		inputParams[key] = val;
 	}
-	std::vector<std::string> arguments = {"workDir", "collsys", "sNN", "pName", "xB", "eventIDs", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
+	std::vector<std::string> arguments = {"collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED", "config", "h"};
 	for (const auto &inputParam : inputParams) {
 		if(std::find(arguments.begin(), arguments.end(), inputParam.first) == arguments.end()) {
 			std::cerr << "Error: provided argument flag: '" << inputParam.first << "' is not an option." << std::endl;
 			std::cerr << "Valid parameters and default values are: ";
-			std::cerr << "--workDir --collsys=PbPb --sNN=5020GeV --pName=Charm --xB=0.6 --eventIDs=1000-4000 --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
+			std::cerr << "--collsys=PbPb --sNN=5020GeV --pName=Charm --centrality=30-40% --xB=0.6 --eventN=1000 --BCPP=20% --phiGridN=25 --TIMESTEP=0.1 --TCRIT=0.155 --BCPSEED=0" << std::endl;
 			std::cerr << "For congiguration file use: --config=[pathToConfFile]" << std::endl;
 			m_error = true;
 		}
-	}
-
-	if (inputParams.count("workDir") == 0) {
-		std::cerr << "Error: work directory path parameter must be provided. Aborting..." << std::endl;
-		m_error = true;
-	}
-	else {
-		m_workDir = inputParams.at("workDir");
-		if (m_workDir.back() != '/') m_workDir += "/";
 	}
 
 	//checking if configuration file is provided:
@@ -61,12 +52,12 @@ energyLoss::energyLoss(int argc, const char *argv[])
 			m_error = true;
 		}
 	}
-	std::vector<std::string> argumentsFile = {"collsys", "sNN", "pName", "xB", "eventIDs", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
+	std::vector<std::string> argumentsFile = {"collsys", "sNN", "pName", "centrality", "xB", "eventN", "BCPP", "phiGridN", "TIMESTEP", "TCRIT", "BCPSEED"};
 	for (const auto &inputParam : inputParamsFile) {
 		if(std::find(argumentsFile.begin(), argumentsFile.end(), inputParam.first) == argumentsFile.end()) {
 			std::cerr << "Error: in configration file provided argument: '" << inputParam.first << "' is not an option." << std::endl;
 			std::cerr << "Valid parameters and default values are: \n";
-			std::cerr << "collsys = PbPb\nsNN = 5020GeV\npName = Charm\nxB = 0.6\neventIDs = 1000-4000\nphiGridN = 25\nTIMESTEP = 0.1\nTCRIT = 0.155\nBCPSEED = 0" << std::endl;
+			std::cerr << "collsys = PbPb\nsNN = 5020GeV\npName = Charm\ncentrality = 30-40%\nxB = 0.6\neventN = 1000\nBCPP = 20%\nphiGridN = 25\nTIMESTEP = 0.1\nTCRIT = 0.155\nBCPSEED = 0" << std::endl;
 			m_error = true;
 		}
 	}
@@ -82,19 +73,18 @@ energyLoss::energyLoss(int argc, const char *argv[])
 	m_pName = "Charm"; if (inputParamsFile.count("pName") > 0) m_pName = inputParamsFile["pName"];
 					   if (    inputParams.count("pName") > 0) m_pName =     inputParams["pName"];
 
+	m_centrality = "30-40%"; if (inputParamsFile.count("centrality") > 0) m_centrality = inputParamsFile["centrality"];
+						     if (    inputParams.count("centrality") > 0) m_centrality =     inputParams["centrality"];
+
 	m_xB = 0.6; if (inputParamsFile.count("xB") > 0) m_xB = stod(inputParamsFile["xB"]);
 				if (    inputParams.count("xB") > 0) m_xB = stod(    inputParams["xB"]);
 
-	m_eventIDlow  = 1000;
-	m_eventIDhigh = 4000;
-	std::string eventIDs; if (inputParamsFile.count("eventIDs") > 0) eventIDs = inputParamsFile["eventIDs"];
-					 	  if (    inputParams.count("eventIDs") > 0) eventIDs =     inputParams["eventIDs"];
-	if (!eventIDs.empty()) {
-		std::stringstream ss(eventIDs);
-		std::string buffer;
-		std::getline(ss, buffer, '-'); m_eventIDlow  = std::stoi(buffer);
-		std::getline(ss, buffer, '-'); m_eventIDhigh = std::stoi(buffer);
-	}
+	m_eventN = 1000; if (inputParamsFile.count("eventN") > 0) m_eventN = stoi(inputParamsFile["eventN"]);
+					 if (    inputParams.count("eventN") > 0) m_eventN = stoi(    inputParams["eventN"]);
+
+	std::string bcppstr = "20%"; if (inputParamsFile.count("BCPP") > 0) bcppstr = inputParamsFile["BCPP"];
+						         if (    inputParams.count("BCPP") > 0) bcppstr =     inputParams["BCPP"];
+	bcppstr.replace(bcppstr.find("%"), 1, ""); m_BCPP = stod(bcppstr)/100.0;
 
 	m_phiGridN = 25; if (inputParamsFile.count("phiGridN") > 0) m_phiGridN = stoi(inputParamsFile["phiGridN"]);
 					 if (    inputParams.count("phiGridN") > 0) m_phiGridN = stoi(    inputParams["phiGridN"]);
@@ -127,13 +117,7 @@ energyLoss::energyLoss(int argc, const char *argv[])
 
 int energyLoss::loadInputsFromFile(const std::string &filePath, std::map<std::string, std::string> &inputParamsFile)
 {
-	if (m_workDir.length() == 0) {
-		return -1;
-	}
-
-	std::string configFilePath = m_workDir + "elossjob/" + filePath;
-
-	std::ifstream file_in(configFilePath);
+	std::ifstream file_in(filePath);
 	if (!file_in.is_open()) {
 		std::cerr << "Error: unable to open configuration file. Aborting..." << std::endl;
 		return -1;
@@ -161,9 +145,9 @@ void energyLoss::runEnergyLoss()
 	if (loadLNorm() != 1) return;
 	if (loadLColl() != 1) return;
 
-	if (generateBCPPmap()  != 1) return;
 	if (generateTempGrid() != 1) return;
- 	if (loadPhiPoints()    != 1) return;
+	
+ 	if (loadPhiPoints() != 1) return;
 
 	if ((m_pName == "Bottom") || (m_pName == "Charm")) {
 		runELossHeavyFlavour();
@@ -250,43 +234,43 @@ int energyLoss::loadLdndx()
 
 	const std::string path_in = "./ltables/ldndx_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
 
-	std::ifstream file_in(path_in, std::ios::binary);
+	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
-		std::cerr << "Error: unable to open Ldndx table file. Aborting..." << std::endl;
+		std::cerr << "Error: unable to open Ldndx table file." << std::endl;
 		return -1;
 	}
 
 	std::vector<double> Ldndx_tau, Ldndx_p, Ldndx_T, Ldndx_x, Ldndx_f;
 
-	for (const auto& tau : m_Grids.tauPts()) {
-		for (const auto& p : m_Grids.pPts()) {
-			for (const auto& T : m_Grids.TPts()) {
-				for (const auto& x : m_Grids.xPts()) {
-					Ldndx_tau.push_back(tau);
-					Ldndx_p.push_back(p);
-					Ldndx_T.push_back(T);
-					Ldndx_x.push_back(x);
-				}
-			}
-		}
-	}
+	std::string line; double buffer;
 
-	float buffer;
-	while (true) {
-		file_in.read((char*)&buffer, sizeof(float));
-		if (file_in.eof()) break;
-		Ldndx_f.push_back(static_cast<double>(buffer));
+	while (std::getline(file_in, line))
+	{
+        if (line.at(0) == '#')
+            continue;
+
+		std::stringstream ss(line);
+		ss >> buffer; Ldndx_tau.push_back(buffer);
+		ss >> buffer; Ldndx_p.push_back(buffer);
+		ss >> buffer; Ldndx_T.push_back(buffer);
+		ss >> buffer; Ldndx_x.push_back(buffer);
+		ss >> buffer; Ldndx_f.push_back(buffer);
 	}
 
 	file_in.close();
 
-	if (Ldndx_f.size() != Ldndx_tau.size()) {
-		std::cerr << "Error: Ldndx grids to not correspond to import function values. Aborting..." << std::endl;
-		return -2;
-	}
-
 	m_Ldndx.setData(Ldndx_tau, Ldndx_p, Ldndx_T, Ldndx_x, Ldndx_f);
-	
+
+	std::vector<std::vector<double>> domain = m_Ldndx.domain();
+	if (m_Grids.tauPts(0)  < domain[0][0]) {std::cerr << "Error: tau grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.tauPts(-1) > domain[0][1]) {std::cerr << "Error: tau grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.pPts(0)    < domain[1][0]) {std::cerr << "Error:   p grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.pPts(-1)   > domain[1][1]) {std::cerr << "Error:   p grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TPts(0)    < domain[2][0]) {std::cerr << "Error:   T grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TPts(-1)   > domain[2][1]) {std::cerr << "Error:   T grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.xPts(0)    < domain[3][0]) {std::cerr << "Error:   x grid point(s) out of lower bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.xPts(-1)   > domain[3][1]) {std::cerr << "Error:   x grid point(s) out of upper bound of Ldndx domain. Aborting..." << std::endl; return -1;}
+
 	return 1;
 }
 
@@ -303,40 +287,40 @@ int energyLoss::loadLNorm()
 
 	const std::string path_in = "./ltables/lnorm_nf=" + nfss.str() + "_" + partName + "_xB=" + xBss.str() + ".dat";
 
-	std::ifstream file_in(path_in, std::ios::binary);
+	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
-		std::cerr << "Error: unable to open LNorm table file. Aborting..." << std::endl;
+		std::cerr << "Error: unable to open LNorm table file." << std::endl;
 		return -1;
 	}
 
 	std::vector<double> LNorm_tau, LNorm_p, LNorm_T, LNorm_f; //defining vectors that store LNorm table values
 
-	for (const auto& tau : m_Grids.tauPts()) {
-		for (const auto& p : m_Grids.pPts()) {
-			for (const auto& T : m_Grids.TPts()) {
-				LNorm_tau.push_back(tau);
-				LNorm_p.push_back(p);
-				LNorm_T.push_back(T);
-			}
-		}
-	}
+	std::string line; double buffer;
 
-	float buffer;
-	while (true) {
-		file_in.read((char*)&buffer, sizeof(float));
-		if (file_in.eof()) break;
-		LNorm_f.push_back(static_cast<double>(buffer));
+	while (std::getline(file_in, line))
+	{
+        if (line.at(0) == '#')
+            continue;
+
+		std::stringstream ss(line);
+		ss >> buffer; LNorm_tau.push_back(buffer);
+		ss >> buffer; LNorm_p.push_back(buffer);
+		ss >> buffer; LNorm_T.push_back(buffer);
+		ss >> buffer; LNorm_f.push_back(buffer);
 	}
 
 	file_in.close();
-	
-	if (LNorm_f.size() != LNorm_tau.size()) {
-		std::cerr << "Error: Lnorm grids to not correspond to import function values. Aborting..." << std::endl;
-		return -2;
-	}
 
 	m_LNorm.setData(LNorm_tau, LNorm_p, LNorm_T, LNorm_f);
-	
+
+	std::vector<std::vector<double>> domain = m_LNorm.domain();
+	if (m_Grids.tauPts(0)  < domain[0][0]) {std::cerr << "Error: tau grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.tauPts(-1) > domain[0][1]) {std::cerr << "Error: tau grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.pPts(0)    < domain[1][0]) {std::cerr << "Error:   p grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.pPts(-1)   > domain[1][1]) {std::cerr << "Error:   p grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TPts(0)    < domain[2][0]) {std::cerr << "Error:   T grid point(s) out of lower bound of LNorm domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TPts(-1)   > domain[2][1]) {std::cerr << "Error:   T grid point(s) out of upeer bound of LNorm domain. Aborting..." << std::endl; return -1;}
+
 	return 1;
 }
 
@@ -352,79 +336,43 @@ int energyLoss::loadLColl()
 
 	const std::string path_in = "./ltables/lcoll_nf=" + nfss.str() + "_" + partName + ".dat";
 
-	std::ifstream file_in(path_in, std::ios::binary);
+	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
-		std::cerr << "Error: unable to open LColl table file. Aborting..." << std::endl;
+		std::cerr << "Error: unable to open LColl table file." << std::endl;
 		return -1;
 	}
 
 	std::vector<double> LColl_p, LColl_T, LColl_f;
 
-	for (const auto& p : m_Grids.pCollPts()) {
-		for (const auto& T : m_Grids.TCollPts()) {
-			LColl_p.push_back(p);
-			LColl_T.push_back(T);
-		}
-	}
+	std::string line; double buffer;
 
-	float buffer;
-	while (true) {
-		file_in.read((char*)&buffer, sizeof(float));
-		if (file_in.eof()) break;
-		LColl_f.push_back(static_cast<double>(buffer));
+	while (std::getline(file_in, line))
+	{
+        if (line.at(0) == '#')
+            continue;
+            
+		std::stringstream ss(line);
+		ss >> buffer; LColl_p.push_back(buffer);
+		ss >> buffer; LColl_T.push_back(buffer);
+		ss >> buffer; LColl_f.push_back(buffer);
 	}
 
 	file_in.close();
 
-	if (LColl_f.size() != LColl_p.size()) {
-		std::cerr << "Error: Lcoll grids to not correspond to import function values. Aborting..." << std::endl;
-		return -2;
-	}
-
 	m_LColl.setData(LColl_p, LColl_T, LColl_f);
+
+	std::vector<std::vector<double>> domain = m_LColl.domain();
+	if (m_Grids.pCollPts(0)  < domain[0][0]) {std::cerr << "Error: p grid point(s) out of lower bound of LColl domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.pCollPts(-1) > domain[0][1]) {std::cerr << "Error: p grid point(s) out of upper bound of LColl domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TCollPts(0)  < domain[1][0]) {std::cerr << "Error: T grid point(s) out of lower bound of LColl domain. Aborting..." << std::endl; return -1;}
+	if (m_Grids.TCollPts(-1) > domain[1][1]) {std::cerr << "Error: T grid point(s) out of upper bound of LColl domain. Aborting..." << std::endl; return -1;}
 
 	return 1;
 }
 
-int energyLoss::generateBCPPmap()
-{
-    std::string path_in = m_workDir + "elossjob/bcpp.dat";
-	std::ifstream file_in(path_in, std::ios_base::in);
-	if (!file_in.is_open()) {
-		std::cerr << "Error: unable to open BCPP file. Aborting..." << std::endl;
-		return -1;
-	}
-
-    const size_t EMPTY = 0;
-
-	std::string line, pName, buffer; size_t eventID[2]; double bcpp;
-	while (std::getline(file_in, line))
-	{
-		if (line[0] == '#') {
-			pName = line;
-			pName.replace(pName.find("#"), sizeof("#")-1, "");
-			continue;
-		}
-
-		std::stringstream ss(line);
-		ss >> eventID[0]; ss >> eventID[1];
-		
-		ss >> buffer;
-		buffer.replace(buffer.find("%"), sizeof("%")-1, "");
-		bcpp = std::stod(buffer)/100.0;
-		
-        m_BCPP[pName][eventID[0]] = bcpp;
-        m_BCPP[pName][eventID[1]] = EMPTY;
-	}
-
-	file_in.close();
-
-    return 1;
-}
-
 int energyLoss::generateTempGrid()
 {
-	const std::string path_in = m_workDir + "Temp_evo/temp_grids.dat";
+	const std::string path_in = "./evols/evols_cent=" + m_centrality + "/evolgridparams.dat";
 
 	std::ifstream file_in(path_in);
 	if (!file_in.is_open()) {
@@ -506,7 +454,7 @@ int energyLoss::loadPhiPoints()
 
 int energyLoss::loadBinCollPoints(size_t event_id, std::vector<std::vector<double>> &bcpoints)
 {
-	const std::string path_in = m_workDir + "bcp/bcp" + std::to_string(event_id) + ".dat";
+	const std::string path_in = "./binarycollpts/binarycollpts_cent=" + m_centrality + "/binarycollpts" + std::to_string(event_id) + ".dat";
 
 	std::ifstream file_in(path_in, std::ios_base::in);
 	if (!file_in.is_open()) {
@@ -546,17 +494,9 @@ int energyLoss::loadBinCollPoints(size_t event_id, std::vector<std::vector<doubl
 
 int energyLoss::generateInitPosPoints(size_t event_id, std::vector<double> &xPoints, std::vector<double> &yPoints)
 {
-	const size_t EMPTY = 0;
-	std::map<size_t, double>::iterator it = m_BCPP[m_pName].upper_bound(event_id);
-	if (it == m_BCPP[m_pName].begin() || (--it)->second == EMPTY) {
-		std::cerr << "Error: eventID not in range. Aborting..." << std::endl;
-		return -2;
-	}
-	double bcpp = it->second;
-
 	std::vector<std::vector<double>> bcpts; if (loadBinCollPoints(event_id, bcpts) != 1) return -1;
 
-	size_t bsptsNum = static_cast<size_t>(bcpp*static_cast<double>(bcpts.size()));
+	size_t bsptsNum = static_cast<size_t>(m_BCPP*static_cast<double>(bcpts.size()));
 
 	if (bsptsNum < 1) bsptsNum = 1;
 
@@ -579,7 +519,7 @@ int energyLoss::generateInitPosPoints(size_t event_id, std::vector<double> &xPoi
 
 int energyLoss::loadTProfile(size_t event_id, interpolationF<double> &tempProfile)
 {
-	const std::string path_in = m_workDir + "Temp_evo/Temp_evo" + std::to_string(event_id) + ".dat";
+	const std::string path_in = "./evols/evols_cent=" + m_centrality + "/tempevol" + std::to_string(event_id) + ".dat";
 
 	std::ifstream file_in(path_in, std::ios_base::in | std::ios_base::binary);
 	if (!file_in.is_open()) {
@@ -648,6 +588,8 @@ int energyLoss::exportResults(const std::string &particleName, size_t event_id, 
 	std::vector<std::string> header;
     header.push_back("#collision_system: " + m_collsys);
 	header.push_back("#collision_energy: " + m_sNN);
+	header.push_back("#particle_type: " + particleName);
+	header.push_back("#centrality: " + m_centrality);
 
 	std::stringstream xbsstr; xbsstr << std::fixed << std::setprecision(1) << m_xB;
 	header.push_back("#xB = " + xbsstr.str());
@@ -673,17 +615,7 @@ int energyLoss::exportResults(const std::string &particleName, size_t event_id, 
 	header.push_back("#   pT [GeV]       phi          R_AA   ");
 
 	//setting file path:
-	std::string pCode = "c";
-	if (particleName == "Bottom")     pCode = "b";
-	if (particleName == "Charm")      pCode = "c";
-	if (particleName == "Down")       pCode = "d";
-	if (particleName == "DownBar")    pCode = "db";
-	if (particleName == "Gluon")      pCode = "g";
-	if (particleName == "Strange")    pCode = "s";
-	if (particleName == "StrangeBar") pCode = "sb";
-	if (particleName == "Up")         pCode = "u";
-	if (particleName == "UpBar")      pCode = "ub";
-	const std::string path_out = m_workDir + "elossjob/results/" + pCode + std::to_string(event_id) + ".dat";
+	const std::string path_out = "./results/results" + particleName + "/" + particleName + "_" + m_collsys + "_sNN=" + m_sNN + "_cent=" + m_centrality + "_xB=" + xbsstr.str() + "_dist_" + std::to_string(event_id) + ".dat";
 
 	std::ofstream file_out(path_out, std::ios_base::out);
 	if (!file_out.is_open()) {
@@ -901,7 +833,7 @@ void energyLoss::runELossHeavyFlavour()
 	FdAHaltonSeqInit(150);
 
 	#pragma omp parallel for schedule(dynamic)
-	for (size_t eventID=m_eventIDlow; eventID<m_eventIDhigh; ++eventID)
+	for (size_t eventID=0; eventID<m_eventN; eventID++)
 	{
 		std::vector<double> xPoints, yPoints; generateInitPosPoints(eventID, xPoints, yPoints);
 
@@ -1096,7 +1028,7 @@ void energyLoss::runELossLightQuarks()
 	FdAHaltonSeqInit(100);
 
 	#pragma omp parallel for schedule(dynamic)
-	for (size_t eventID=m_eventIDlow; eventID<m_eventIDhigh; ++eventID)
+	for (size_t eventID=0; eventID<m_eventN; eventID++)
 	{
 		std::vector<double> xPoints, yPoints; generateInitPosPoints(eventID, xPoints, yPoints);
 
@@ -1296,7 +1228,7 @@ void energyLoss::runELossLightFlavour()
 	dAHaltonSeqInit(1000);
 
 	#pragma omp parallel for schedule(dynamic)
-	for (size_t eventID=m_eventIDlow; eventID<m_eventIDhigh; ++eventID)
+	for (size_t eventID=0; eventID<m_eventN; eventID++)
 	{
 		std::vector<double> xPoints, yPoints; generateInitPosPoints(eventID, xPoints, yPoints);
 
